@@ -1,0 +1,620 @@
+---
+title: "The Effects of Beliefs About Pain and Distress in Animal Research on Opinions of Animal Research in UW-Madison Students and Faculty"
+author: 'Michael Mays'
+date: "Originally prepared: October 2020"
+output:
+  bookdown::html_document2:
+    fig_caption: yes
+    number_sections: no
+    toc: yes
+    toc_float: yes
+  fig_caption: yes
+abstract: "Scientific research using non-human animals remains controversial. This
+  paper extends Sandgren, et. al's 2019 survey of University of Wisconsin-Madison
+  students and faculty by analyzing how respondents' beliefs on the justifiability
+  of inflicting pain and distress in animal research relate to their opinions, self-reported knowledge, and perceptions of regulatory sufficiency on animal research generally. It finds that respondents---especially students---who found pain and distress less justifiable tended to support animal research less, believe its regulation was more lax, and were less likely to have participated in animal research themselves, among other differences. It also finds significant variation in responses from those with different beliefs about pain and distress justifiability within genders and academic divisions, particularly among female students and students in the biological sciences. For faculty, the main source of variability was not pain and distress justifiability, but academic division."
+fontsize: 11pt
+indent: yes
+bibliography: survey.bib
+csl: vancouver.csl
+header-includes:
+- \usepackage{xcolor}
+- \usepackage{graphicx}
+- \usepackage{colortbl}
+- \usepackage{float}
+- \usepackage{enumitem}
+- \usepackage{amsmath}
+- \usepackage{subfig}
+- \usepackage{hyperref}
+- \hypersetup{breaklinks=true}
+- \usepackage{titling}
+- \usepackage[square, numbers]{natbib}
+- \bibliographystyle{unsrtnat}
+- \usepackage{caption}
+- \captionsetup[table]{font=scriptsize}
+---
+
+```{r setup, include=F, echo=F}
+knitr::opts_chunk$set(echo = F, message=F,
+                      warning=F, fig.width=10,
+                      fig.height=5,
+                      out.width="\\linewidth")
+
+#library(rstatix)
+library(tidyverse)
+library(readxl)
+library(digest)
+library(flextable)
+library(officer)
+library(webshot2)
+library(molic)
+library(ess)
+
+source("Functions.R")
+source("data.R")
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+#load("proj1.RData")
+load("proj1_vec.RData")
+load("proj1_long.RData")
+load("plot_func.RData")
+load("proj1_numeric.RData")
+load("lists.RData")
+```
+
+```{r use_q_func, eval=F}
+
+for(q in interest){
+  print(q)
+  
+  na <- paste(q, "_list", sep="")
+  li <- suppressWarnings(suppressMessages(quest_func(q)))
+  
+  assign(na, li)
+}
+
+save(list=paste(interest, "_list", sep=""), file="lists.RData")
+
+```
+
+```{r grp_sizes}
+
+
+
+p1 <- dat_full %>%
+  select(ARAS_H_Group, S_or_F) %>%
+  drop_na() %>%
+  mutate(ARAS_H_Group=factor(ARAS_H_Group, levels=c("low",
+                                  "mid", "high"),
+                             labels=c("Low",
+                                      "Moderate",
+                                      "High"))) %>%
+  ggplot(aes(x=ARAS_H_Group, fill=S_or_F)) +
+  geom_bar(position="dodge") +
+  scale_fill_manual(values=cbPalette[1:2], name=NULL) +
+  labs(y="Number of Respondents", x="ARAS-PD Group",
+       title="Campus Status") +
+  theme_bw() +
+  theme(legend.position=c(.77, .85), 
+        legend.text = element_text(size=15),
+        legend.box.margin = unit(c(0, 0, 0, 0), "cm"),
+        legend.margin = unit(c(0, 0, 0, 0), "cm"),
+        legend.key.size = unit(0.3, "cm"))
+
+p2 <- dat_full %>%
+  select(ARAS_H_Group, division) %>%
+  drop_na() %>%
+  mutate(ARAS_H_Group=factor(ARAS_H_Group, levels=c("low",
+                                  "mid", "high"),
+                             labels=c("Low",
+                                      "Moderate",
+                                      "High"))) %>%
+  ggplot(aes(x=ARAS_H_Group, fill=division)) +
+  geom_bar(position="dodge") +
+  scale_fill_manual(values=cbPalette[3:6],
+                    name=NULL, labels=c("Bio. Sci.",
+                                      "Hum.",
+                                      "Phys. Sci.",
+                                      "Soc. Sci.")) +
+  labs(y="Number of Respondents", x="ARAS-PD Group",
+       title="Academic Division") +
+  theme_bw() +
+  theme(legend.position=c(.7, .775), 
+        legend.text = element_text(size=15),
+        legend.box.margin = unit(c(0, 0, 0, 0), "cm"),
+        legend.margin = unit(c(0, 0, 0, 0), "cm"),
+        legend.key.size = unit(0.3, "cm"))
+
+p3 <- dat_full %>%
+  select(ARAS_H_Group, gender_m_d) %>%
+  drop_na() %>%
+  mutate(ARAS_H_Group=factor(ARAS_H_Group, levels=c("low",
+                                  "mid", "high"),
+                             labels=c("Low",
+                                      "Moderate",
+                                      "High"))) %>%
+  ggplot(aes(x=ARAS_H_Group, fill=gender_m_d)) +
+  geom_bar(position="dodge") +
+  scale_fill_manual(values=cbPalette[7:8], name=NULL,
+                    labels=c("F", "M")) +
+  labs(y="Number of Respondents", x="ARAS-PD Group",
+       title="Gender") +
+  theme_bw() +
+  theme(legend.position=c(.8, .87), 
+        legend.text = element_text(size=15),
+        legend.box.margin = unit(c(0, 0, 0, 0), "cm"),
+        legend.margin = unit(c(0, 0, 0, 0), "cm"),
+        legend.key.size = unit(0.3, "cm")) 
+
+
+
+```
+
+```{r bar plots, eval=F}
+plot_func(interest[1:4])
+plot_func(interest[5])
+plot_func(interest[6:7])
+plot_func(interest[8])
+plot_func(interest[c(9:10)])
+
+plot_func(paste("q3", letters[1:4], sep=""))
+```
+
+```{r dont know plots, eval=F}
+dat_full %>%
+  select(S_or_F, all, ARAS_H_Group, contains("dont"),
+         contains("DK")) %>%
+  filter_at(vars(all), any_vars(.=="Don't know")) %>%
+  select(S_or_F, ARAS_H_Group, contains("dont")&!ends_with("_d")&!
+           contains("Scale")) %>%
+  pivot_longer(contains("dont"),
+               names_to="Q",
+               values_to="Answer",
+               ) %>%
+  ggplot(aes(x=S_or_F, fill=Answer)) +
+  geom_bar() +
+  facet_grid(~Q)
+
+```
+
+```{r mean response plots, eval=F}
+
+dat_plot %>%
+  #filter(Question %notin% dont_know &
+  #         Question%notin% personal_full |
+  #         Question %in% interest) %>%
+  group_by(S_or_F, ARAS_H_Group, category) %>%
+  mutate(A = as.numeric(as.character(Ans_num)))%>%
+  summarize(mean=mean(A), sd=sd(A), n=n())%>%
+  arrange(category) %>%
+  filter(category!="personal") %>%
+  #pivot_wider(id_cols = c(category, S_or_F),
+  #            names_from = ARAS_H_Group,
+  #            values_from=c(mean, sd, n)) %>%
+  #mutate(m=mean_1-mean_2) %>%
+  ggplot(aes(x=category, y=mean, color=ARAS_H_Group))+
+  geom_point() +
+  facet_grid(~S_or_F) +
+  coord_flip()
+
+subset <- interest
+z_star <- qnorm(0.975)
+
+dat_plot %>%
+  filter(Question %notin% dont_know &
+           Question%notin% personal_full |
+           Question %in% interest) %>%
+  filter(Question %in% subset) %>%
+  group_by(S_or_F, ARAS_H_Group, Question) %>%
+  mutate(A = as.numeric(as.character(Ans_num)),
+         Question = factor(Question, levels=subset))%>%
+  summarize(mean=mean(A), sd=sd(A), n=n()) %>%
+  arrange(Question) %>%
+  #pivot_wider(id_cols = c(Question, S_or_F),
+  #            names_from = ARAS_H_Group,
+  #            values_from=c(mean, sd, n)) %>%
+  #mutate(m=mean_1-mean_2) %>%
+  ggplot(aes(x=Question, y=mean, color=ARAS_H_Group)) +
+  geom_point(position=position_dodge(width=0.5)) +
+  geom_errorbar(aes(ymin=mean-z_star*(sd/sqrt(n)),
+                    ymax=mean+z_star*(sd/sqrt(n))),
+                position=position_dodge(width=0.5)) +
+  facet_grid(~S_or_F) +
+  coord_flip() +
+  theme_bw()
+
+```
+
+```{r make_tab_pics, eval=F}
+
+for(q in interest){
+  
+  li <- paste(q, "_list", sep="")
+  name <- paste("./Pics/", q, ".png", sep="")
+  custom_flextab(eval(as.expression(parse(text=li)))) %>%
+    flextable::save_as_image(path=name, webshot="webshot2")
+  
+}
+
+```
+
+```{r, eval=F}
+
+v <- c("ARAS_H_Group", "gender_m_d", 
+         "division", "acad_level", "job_title",
+         "S_or_F")
+
+dat_full %>%
+  select(q21a, v) %>%
+  select(q21a, ARAS_H_Group, division, S_or_F) %>%
+  #table() %>% data.frame() %>%
+  group_by(division, S_or_F) %>%
+  filter(!(division=="Humanities"&S_or_F=="Faculty"))  %>%
+  #table()
+  #mutate(across(everything(), factor)) %>%
+  do(with(., rstatix::chisq_test(y=q21a, x=ARAS_H_Group, correct=T))) %>%
+  ungroup() %>%
+  add_row(division="Humanities", S_or_F="Faculty")
+
+car::Anova(q21a_list$student$lm, type="II")
+
+dat_full %>%
+  select("q4", v) %>%
+  select(-job_title, -acad_level) %>%
+  drop_na() %>%
+  mutate(across(everything(), unclass)) %>%
+  #group_by(S_or_F) %>%
+  filter(S_or_F==1) %>%
+  select(q4) %>%
+  unlist() %>%
+  chisq.out.test(.)
+  boxplot() %>%
+  .$out
+  mvoutlier::pcout(.)
+
+q4_list$counts %>% drop_na() %>% filter(q_grp!="NA") %>%
+  ggplot(aes(x=q_grp, y=n, color=S_or_F)) +
+  geom_point() +
+  facet_grid(~ARAS_H_Group)
+
+library(sure)
+
+t <- surrogate(q4_list$student$lm)
+gof(q4_list$student$lm, test="ks")
+
+car::outlierTest(asdf$student$lm)
+
+library(DHARMa)
+
+sim_res <- simulateResiduals(q4_list$faculty$lm)
+t <- testOutliers(sim_res, plot = F) 
+
+outlier_test_func <- function(list){
+  q <- list$q
+  
+  if(q %in% dont_know){
+    s_lm <- list$know$student$lm
+    f_lm <- list$know$faculty$lm
+  } else {
+    s_lm <- list$student$lm
+    f_lm <- list$faculty$lm
+  }
+  
+  s_sim_res <- simulateResiduals(s_lm)
+  f_sim_res <- simulateResiduals(f_lm)
+  
+  s_t <- testOutliers(s_sim_res, plot = F) 
+  f_t <- testOutliers(f_sim_res, plot = F)
+  
+  data.frame(S_or_F=c("Student", "Faculty"),
+         p=c(s_t$p.value, f_t$p.value))
+}
+
+outlier_test_func(AAS6Score_list)
+outlier_test_func(ARAS_S5Score_list)
+outlier_test_func(ARAS7Score_list)
+
+tibble(p=t$p.value)
+
+outlier_test_func(q4_list)
+
+dat_full %>%
+  select(starts_with("q")&!contains("Dont")&!contains("Score")&
+           !contains("other")&!contains("sum")&
+           !ends_with("_d")&!contains("Categ")&
+           !contains("Exp")&!contains("Total")&
+           !contains("Sub")&!contains("_md")&
+           !contains("_random")&!contains("_11")&
+           !contains("Cat")&!ends_with("_m")) %>%
+  ncol()
+
+```
+
+```{r, eval=F}
+dat_full %>%
+  select(S_or_F, gender_m_d, division, contains(all))
+
+qs_only <- dat_full %>%
+  select(caseid_original, S_or_F, gender_m_d, division, 
+         starts_with("q")&!contains("Dont")&!contains("Score")&
+           !contains("other")&!contains("sum")&
+           !ends_with("_d")&!contains("Categ")&
+           !contains("Exp")&!contains("Total")&
+           !contains("Sub")&!contains("_md")&
+           !contains("_random")&!contains("_11")&
+           !contains("Cat")&!ends_with("_m"))
+
+ou <- tibble(caseid_original=c(NA), S_or_F=c(NA))
+
+for(i in interest[-c(11:13)]){
+  g <- qs_only %>%
+  #select(S_or_F, gender_m_d, division, i) %>%
+  mutate(across(everything(), unclass)) %>%
+  #drop_na() %>%
+  fit_graph(trace=F, type="tfwd")
+
+outs <- qs_only %>%
+  mutate(across(everything(), unclass)) %>%
+  #select(S_or_F, gender_m_d, division, i) %>%
+  #drop_na() %>%
+  mutate(across(everything(), as.character)) %>%
+  as.matrix() %>%
+  fit_outlier(adj=g)
+
+ou <- qs_only %>%
+  select(caseid_original, S_or_F) %>% 
+  drop_na() %>%
+  slice(which(outliers(outs))) %>%
+  bind_rows(., ou)
+}
+
+ou %>%
+  group_by(caseid_original, S_or_F) %>%
+  summarize(n=n()) %>%
+  filter(n>8) %>% arrange(desc(n))
+
+qs_only %>% filter(caseid_original=="10793")
+
+AAS6Score_list$student$lm %>% cooks.distance() %>% 
+  tibble(cd=.) %>%
+  mutate(id=row_number()) %>%
+  filter(cd>4/n())
+
+ARAS_S5Score_list$student$lm %>% cooks.distance() %>% 
+tibble(cd=.) %>%
+  mutate(id=row_number()) %>%
+  filter(cd>4/n())
+
+olsrr::ols_plot_cooksd_chart(AAS6Score_list$student$lm)
+
+install.packages("OutlierDetection")
+library(OutlierDetection)
+
+o2 <- dat_full %>%
+  select(interest[11:13]) %>%
+  drop_na() %>%
+  OutlierDetection(distance = T) %>%
+  .$`Location of Outlier`
+
+dat_full %>%
+  select(S_or_F, interest[11:13]) %>%
+  drop_na() %>%
+  slice(o2) %>%
+  group_by(S_or_F) %>%
+  summarize(n())
+
+qs_only %>%
+  select(S_or_F, gender_m_d, division, interest[-c(11:13)]) %>%
+  mutate(across(everything(), unclass)) %>%
+  drop_na() %>%
+  PCOutlierDetection()
+
+```
+
+# Summary
+
+This report analyzes a survey of undergraduate students and faculty at the University of Wisconsin-Madison regarding the public's knowledge and perceptions of scientific research involving non-human animal subjects conducted by Sandgren, et. al[@OrigPaper]. Specifically, it investigates the relationship between the level of pain and distress respondents believe to be justifiable in the course of scientific research and their support for, self-reported knowledge of, and beliefs about animal research more broadly. It does so by first categorizing respondents into three groups based on their mean Animal Research Attitude Score--Pain and Distress (ARAS-PD) score: those who believed that no or only very low levels of pain and distress were justifiable, those who believed moderate levels of pain and distress were justifiable, and those who believed that a great deal of pain and distress were justifiable. Using these groups, logistic regression models and other statistical were constructed for students and faculty separately to determine whether responses to 10 questions---and three other scores measuring percieved justifiability of animal research---varied by ARAS-PD group, gender, and/or academic discipline. The major results are as follows:
+
+## Key Findings
+
+* Among students, differences between the low and moderate ARAS-PD groups were clear and consistent. The low group felt animal research to be less important, felt the rules and regulations governing animal research were too lax and/or poorly enforced relative to those in the moderate group. These students were also less likely to have participated in animal research and more likely to have been vegetarian or vegan in the previous five years.
+* The largest and most consistent variations between ARAS-PD groups were found for female students and students in the biological sciences. ARAS-PD groups from these two populations varied greatly in their self-reported knowledge of animal research rules and regulations, ability to make informed decisions, and opinion of how thoroughly research proposals are reviewed at UW-Madison.
+* Across gender and academic division, faculty in different ARAS-PD groups tended to vary less in their opinions, knowledge, and beliefs about animal research than their student counterparts.
+* Regardless of ARAS-PD group, both students and faculty in the biological sciences tended to find animal research more important, reported higher levels of knowledge about the issue, and believed animal research was sufficiently or too strictly regulated relative at UW-Madison to any other academic discipline.
+* The question of animal research's translatability to humans showed the clearest division between ARAS-PD groups for both students and faculty. Male and female students and faculty, students in every academic division, and faculty in every division except physical sciences all had significant variation in ARAS-PD groups' beliefs on translatability.
+
+# Introduction
+
+Scientific research lies at the intersection of expertism and public interest. For that reason, public policy about science must account for the perspectives of diverse stakeholders. Scientific research involving the use of non-human animal subjects ("animal research") has been especially controversial in this regard; though animal research can fulfill valid scientific purposes, it has long been perceived by some segment of the public as cruel, unnecessary, or both. To this end, Sandgren, et. al conducted a survey of 942 University of Wisconsin-Madison (UW-Madison) faculty and 782 UW-Madison undergraduates to measure respondents' opinions and knowledge about the use of non-human animals in scientific research [@OrigPaper]. Their study dealt with the perceived justifiability of animal research generally. Here, I extend their findings by focusing on the perceived justifiability of animal research involving the use of pain and distress. Specifically, this report asks how the level of pain and distress respondents believe is justifiable in animal research affects their opinions and knowledge on the subject. I look at students and faculty separately, and then compare their results qualitatively and statistically.
+
+Section 2 details the sampling and survey methods employed by Sandgren et. al before laying out the research questions guiding this report and the statistical analyses conducted. Section 3 gives the results of these analyses organized by survey question topic: first, the importance of animal research, then self-reported knowledge about the subject, followed by perceptions of the rules and regulations governing animal research, and finally respondent lifestyle and activism. Section 4 concludes with a discussion of the results in aggregate and briefly outlines some limitations of my analyses, as well as topics for future research.
+
+# Materials & Methods
+
+The researchers conducted an English-language online survey with 27 questions and 99 total items gauging the opinions and attitudes of UW-Madison students and faculty on animal research. This section first discusses how the respondents were sampled before detailing the survey itself, and finally lays out the methods of statistical analysis employed.
+
+## Sampling
+
+Of the 29,536 undergraduate students enrolled at UW-Madison in fall 2016, 2,000 were randomly selected from each academic year (freshman through senior), totaling 8,000 sampled students. The University of Wisconsin Survey Center (UWSC) emailed these students encouraging them to fill out the questionnaire and a link to the online questionnaire. Students were first emailed September 29, 2016, and were reminded every 10 days from September 29 to November 22, 2016; students who responded to the survey were not sent reminder emails thereafter. Of the 8,000 students who received the emails, 782 completed the questionnaire, a response rate of 9.8\%.
+
+Using name, campus postal address, and email address information from the spring 2017 faculty census, researchers contacted 2,153 currently-employed faculty members up to five times. The initial contact contained information about the survey, a URL, and log-in credentials, along with a \$2 bill. Faculty who had not yet completed the questionnaire received up to three reminder emails. If a faculty member had not filled out the questionnaire after four contact attempts, they were mailed a paper copy of the questionnaire. Of the 2,153 faculty members contacted, 942 completed the questionnaire, a response rate of 44\%.
+
+## Questionnaire
+
+The questionnaire contained 27 questions, some of which were composed of several response items, totaling 99 response items. Questions asked respondents about their feelings and self-reported knowledge of various aspects of animal research. To ensure item wordings were neutral and valid, researchers reviewed existing literature on public attitudes towards animal research and garnered input from diverse stakeholders within and outside the University.
+
+The items of interest for this report are questions: 1, perceived importance; 2, self-reported knowledge of arguments for and against; 4, translatability to humans; 12, self-reported knowledge of rules and regulations at UW-Madison; 13, opinion of rule and regulation sufficiency at UW-Madison; 14, opinion of rule and regulation enforcement at UW-Madison; 15, opinion of research proposal review thoroughness at UW-Madison; 20, self-reported knowledge of ability to make informed decisions; 21a, whether the respondent has worked on an animal research project in the past five years; and 22b, whether the respondent has been vegetarian or vegan in the last five years.
+
+Most items used 5-option Likert scales with minor changes in wording to suit the context of the question. The exceptions are questions: 13, which had three options; and 21a and 22b, which are yes/no questions. In addition, questions 13 through 17 and question 20 included "Don't know" responses. Similarly, question 12's "Nothing" response was treated as a "Don't know" response since the question measures self-reported knowledge. Items within certain questions were coded with alternating scales, meaning a higher value might indicate a more favorable attitude towards animal research on one item and a less favorable attitude on another. For the purposes of analysis, all items were coded so that higher-valued responses indicate more favorability towards animal research. Finally, questions 23--27 asked about personal characteristics of the respondents, including gender, race and ethnicity, and major (for students) or academic division (for faculty). Students were categorized into academic divisions based on their selected major as detailed in Sandgren, et. al [@OrigPaper]. The four academic divisions used in this categorization were biological sciences, humanities, physical sciences, and social sciences.
+
+In addition, researchers also tabulated four aggregate scores measuring various dimensions of animal research justifiability. These scores were calculated by meaning a respondent's answers to a set of related items. These are: the Animal Attitude Scale (AAS), which measures general attitudes about the humanity's relationship with non-human animals (items 3a--3f); he Animal Research Attitudes Scale--Purpose (ARAS--P), which measures attitudes about the justifiability of animal research for certain purposes (items 5a--5g); the Animal Research Attitudes Scale--Species (ARAS-S), which measures attitudes about the justifiability of conducting animal research on various categories on non-human animals (items 6a--e); and the Animal Research Attitudes Scale--Pain and Distress (ARAS-PD), which measures attitudes about the justifiability of conducting animal research involving pain and distress on various categories on non-human animals for various purposes (questions 7--11, each with items a--g).
+
+## Research Questions
+
+The main research questions for this report were as follows:
+
+1. For students and faculty (separately), how do respondents' ARAS-PD scores relate to their answers on each question of interest?
+2. For students and faculty (separately), how do respondents' ARAS-PD scores relate to their AAS, ARAS-P and ARAS-S scores?
+3. Do these relationships differ for students and faculty?
+4. Do these relationships differ by academic division or gender? If so, do the differences vary between students and faculty?
+
+## Statistical Analyses
+
+Respondents were divided into three groups based on their ARAS-PD scores. "Low" for scores between 1--2.5, "high" for scores of 3.5--5, and "moderate" for scores greater than 2.5 and less than 3.5. These values were selected because they are sensible cut-offs for differing opinions, and produce groups that are of sufficient size. These groups represent members' average attitudes on the justifiability of inflicting pain and distress on non-human animals for various purposes; a cutoff of 2.5 for those in the low group mean, for example, the respondent tended to choose answers coded as 2 ("a little") or 1 ("none") more than they did higher-coded answers, and conversely for those in the high group. Those in the moderate group, then, are those who either believed pain and distress were moderately justifiable, or those whose answers were highly variable, making them not cleanly fit into either other group. The final group sizes were 756 "Low" (361 students, 395 faculty); 635 "Moderate" (274 students, 361 faculty); and 318 "High" (146 students, 172 faculty). These ARAS-PD groupings are not balanced, but only one of the analyses conducted is affected by this (detailed below). Further, the students--faculty ratio in each group is similar to the student--faculty ratio of all respondents.
+
+```{r, include=T, fig.cap="ARAS-PD group sizes by campus status, academic division, and gender."}
+library(gridExtra)
+
+grid.arrange(p1, p2, p3, ncol=3)
+```
+
+Statistical analyses were conducted with `R`. For all questions, bivariate analyses comparing responses between ARAS-PD groups used the Kruskal-Wallis test.^[Though questions 21a and 22b could have been tested with Chi-square tests, this was not done for three reasons: to maintain consistency with other questions, its minimum group size assumption was not uniformly met, and the difference in power and error rate relative to Kruskal-Wallis is marginal.] This is a non-parametric analog to one-way ANOVA, and does not carry the F-test assumption of normally-distributed errors or constant variance between groups. It is thus appropriate for analyzing ordinal data. The proportion of respondents who chose "Don't know" on questions with such an option (12--17, 20) was analyzed using a Z-test for homogeneity of proportions; this is equivalent to conducting a Chi-square goodness-of-fit test on the counts. This test assumes that "Don't know" responses are independent between respondents and that every group has more than five observations, both of which were met. AAS, ARAS-P, and ARAS-S scores were treated as interval data[@scores], and bivariate analyses were conducted with one-way ANOVA F-tests. This assumes normally-distributed errors and constant variance between groups, but is relatively robust to violations of the former. The ANOVAs performed were unbalanced across ARAS-PD group, but this is not an assumption of ANOVA, and it does not affect one-way ANOVA. 
+
+For multivariate analysis, I used ordinal logistic regression models. This model makes a proportional odds assumption, meaning the log-odds ratio is assumed identical between successive categories of the dependent variable. It also assumes the dependent variable is ordinal, and the categories move only in one direction (i.e., higher-valued responses always suggest more agreement than lower-valued responses, or vice-versa). With these models, I estimated odds ratios among the ARAS-PD and demographic groups of interest for students and faculty separately. For questions 21a and 22b, which have dichotomous yes/no responses, logistic regression was used for estimation; all other analyses remained the same. And for AAS, ARAS-P, and ARAS-S scores, I used an OLS linear regression model. This assumes normally-distributed errors with constant variance. To compare estimates from the student and faculty models, I used Wald tests of the estimates' difference. This test assumes zero covariance between the two models' estimates---that is, the effect of an independent variable on responses for students is not influenced by the effect for faculty---but is relatively robust to violations of this assumption[@Ztest].
+
+Since the questions are all categorical in nature, traditional outlier detection was not possible. Instead, outliers were detected using the decomposable graphics model (DGM) proposed by Lindskou, Svante Eriksen, and Tvedebrink [@outs] and implemented in the `molic` `R` package by the former [@outs2]. This method relies on contingency tables and graph theory to detect observations that deviate significantly from their "expected" location in the graph (that is, respondents who gave a set of answers highly unusual for their combination of gender, division, ARAS-PD group). It was determined that almost all "outliers" detected by this method were merely respondents who tended to give middle-of-the-road answers, but occasionally deviated into strong agreement or disagreement. These are not anomalies; this is a relatively common "strategy" employed when responding to Likert-style items [@likert]. As such, no observations were removed in the main analysis. For analysis of the three scores, outlier detection was conducted using Cook's Distance, which measures an observation's influence on the model as a whole. Because I believe that removing outliers should be done sparingly, observations were only removed if they had "large" values (greater than $\frac{4}{n}$) for all three models---15 faculty observations and 40 student observations were removed for the final linear regression models used to analyze the AAS, ARAS-P, and ARAS-S scores, resulting in 930 faculty responses and 742 student responses in these models. 
+
+Other model assumption checks were carried out as well, with no notable deviations from model assumptions. The proportional odds assumption for the ordinal logistic regression models were checked using the `nominal_test` function in the `ordinal` package [@ordinal]; all assumptions for the logistic regression and linear regression models were checked using the simulation-based quantile regression approach implemented in `DHARMa` [@dharma]. Finally, statistical significance was calculated with a Bonferroni family-wise error rate correction to maintain a total level of 0.05 for each test on each model. It is is denoted \*$p<(0.05/k)$; \*\*$p<(0.01/k)$; \*\*\*$p<(0.001/k)$ where $k$ is the number of tests in a "family". For Wald tests, $k=4$; Chi-square tests, $k=1$; odds ratios and Kruskal-Wallis tests, $k=6$.
+
+# Results
+
+This section will lay out the results in sections based on question type. First, two dimensions of relevance, the importance (question 1) and translatability (question 4) of non-human animal research. Second, self-reported knowledge of the facts and arguments (question 2), rules and regulations (question 12), and ability to make informed decisions (question 20) about animal research. Third, opinions about animal research rules and regulations' sufficiency (question 13) and enforcement (question 14), as well as the thoroughness of research proposal reviews (question 15). Finally, personal questions about participation in animal research (question 21a) and vegetarianism or veganism (question 22b). Because ARAS-PD score is highly correlated with AAS, ARAS-P, and ARAS-S scores (from 0.56--0.7), the ARAS-PD group effect is obvious, and these analyses were found to be neither particularly revealing nor of primary interest. As a result, analyses of AAS, ARAS-P, and ARAS-S scores are given in the appendix.
+
+## Importance
+
+Question 1 asked respondents how important the issue of animal research was to them. The results are shown in table \@ref(tab:q1). For students, animal research was significantly more important to the low ARAS-PD group than the moderate group; in other words, students who believed that animal research involving pain and distress was less justifiable found the issue more important. The same was not true for faculty. Female students reported the issue to be significantly more important than did male students, and this effect was found to vary across ARAS-PD groups; neither effects was present for faculty. While there was no difference between academic divisions among students, the responses were found to vary significantly between ARAS-PD groups within the biological and social sciences. Faculty in the humanities, physical sciences, and social sciences found the issue less important than those in the biological sciences, as expected. There were no significant differences between ARAS-PD groups within each academic division.
+
+```{r q1, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Importance of animal research for students and faculty."}
+
+custom_flextab(q1_list)
+
+```
+
+Question 4, shown in table \@ref(tab:q4), asked how translatable respondents believed non-human animal research was to humans. The ARAS-PD group effect is especially evident; for both students and faculty, the low group tended to believe it was less translatable, while the high group believed it to be more translatable. Within all sub-groups except physical sciences faculty, there was a significant variation in responses between ARAS-PD groups. Finally, students and faculty outside of the biological sciences believed animal research to be significantly less translatable than those in the biological sciences. Responses to this question display the clearest differences between ARAS-PD groups of any, a fact which will be returned to in the discussion.
+
+```{r q4, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Belief in the translatability of animal research for students and faculty."}
+
+custom_flextab(q4_list)
+
+```
+
+## Knowledge
+
+Question 2 measured respondents' self-reported knowledge of the arguments for and against animal research, with the analysis beign shown in table \@ref(tab:q2). For both students and faculty, those in the high ARAS-PD group reported higher levels of knowledge than those in the moderate group. However, this effect was not found for any student or faculty sub-groups. And, as with question 4, students and faculty outside of the biological sciences were significantly less likely to report high levels of knowledge about animal research-related arguments than those in the biological sciences.
+
+```{r q2, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Self-reported knowledge of the arguments for and against animal research for students and faculty."}
+
+custom_flextab(q2_list)
+
+```
+
+Question 12 (table \@ref(tab:q12)) asked respondents to self-report knowledge of the rules and regulations governing animal research at UW-Madison. The response "Nothing" was treated as a "Don't know" answer, and those responses were removed from the analyses presented in the main portion of the table. Faculty in the high ARAS-PD group reported significantly greater knowledge than those in the moderate group on this question, while students in the high group did not. As with previous questions, faculty in the humanities, physical sciences and social sciences were significantly less likely to report high levels of regulatory knowledge; this was likewise the case for students in all divisions except humanities. Additionally, there was significant variation between ARAS-PD groups in professed regulatory knowledge among both female students and students in the biological sciences, while no within-group differences were notable for faculty. Finally, there was a significant variation between ARAS-PD groups in the proportion of students who stated that they knew nothing about animal research regulations.
+
+```{r q12, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Self-reported knowledge of the rules and regulations governing animal research at UW-Madison for students and faculty."}
+
+custom_flextab(q12_list)
+
+```
+
+Question 20 (table \@ref(tab:q20)) measured a different dimension of knowledge, namely the respondents' self-reported ability to make informed decisions about animal research. Here, both students and faculty in the high ARAS-PD group were more likely to report that they could make more informed decisions than those in the respective moderate groups, and students in the low group were less likely to do the same. Again, students and faculty in all academic divisions outside of biological sciences reported lower abilities to make informed decisions. There was additionally significant variation between ARAS-PD groups' responses among students in the humanities, those in the biological sciences, and among female students.
+
+```{r q20, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Self-reported ability to make informed decisions about animal research for students and faculty."}
+
+custom_flextab(q20_list)
+
+```
+
+## Rules
+
+The next set of questions asked respondents about their opinions of the regulatory regime governing animal research at UW-Madison. Question 13 asked respondents whether the rules and regulations were sufficient, too stringent, or should be tightened more. The results are given in table \@ref(tab:q13). For both students and faculty, those in the low ARAS-PD group were less likely to believe the rules were sufficient or too stringent, and those in the high ARAS-PD group were more likely to believe the same. Faculty's responses continued the trend of biological sciences' standing apart from other academic divisions; compared to that division, all other divisions' faculty were more likely to suggest that regulations were sufficient or too lax. There was also significant variation between ARAS-PD groups' responses within biological sciences faculty, and within social sciences faculty. For students, the only significant ARAS-PD group effect was among males.
+
+```{r q13, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Student and faculty opinions on the strength of rules and regulations governing animal research at UW-Madison."}
+custom_flextab(q13_list)
+```
+
+Question 14 (table \@ref(tab:q14)) measured respondents' perception of the extent to which animal research rules and regulations are well-enforced at UW-Madison. Students in the low ARAS-PD group were more likely than those in the moderate group to believe that the regulations were not enforced well, though the same was not true of faculty. Similarly, faculty outside of the biological sciences were more likely than those within the biological sciences to believe the regulations were insufficiently enforced. This not true for students in physical sciences, but held for students in the humanities and social sciences. And among female students, there was evidence of significant variation between ARAS-PD groups' beliefs in regulatory enforcement. Likewise, there was signification variation in the proportion who answered "Don't know" among both students and faculty.
+
+```{r q14, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Student and faculty opinions on the enforcement of rules and regulations governing animal research at UW-Madison."}
+custom_flextab(q14_list)
+```
+
+Question 15 (table \@ref(tab:q15)) asked respondents how thoroughly they believed animal research proposals were reviewed at UW-Madison. Students in the low ARAS-PD group were more likely to believe such proposals were not reviewed thoroughly enough, while faculty in the low group did not believe the same. The same was true for students in the humanities and social sciences relative to the biological sciences, but not for those in the physical sciences; among faculty, those in the humanities and physical were more likely than those in the biological sciences to believe review was too lax, while those in the social sciences were not significantly more likely to believe so. There was also of within-gender variability in different ARAS-PD groups' responses; for students, ARAS-PD group responses varied for females, while the same was true of male faculty. The proportion of those in each ARAS-PD group who responded "Don't know" also varied among both students and faculty.
+
+```{r q15, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Student and faculty opinions on how thoroughly animal research proposals are reviewed at UW-Madison."}
+custom_flextab(q15_list)
+```
+
+## Personal
+
+Question 21a (table \@ref(tab:q21a)) asked whether respondents had participated in any animal research project in the past five years. Students in the low ARAS-PD group were significantly less likely to have done so, along with both students and faculty in the physical sciences and social sciences. Significant differences between ARAS-PD groups' likelihood of having participated in animal research were found among female students, as well as students in the biological sciences. It is worth mentioning that no humanities faculty in any ARAS-PD group had ever participated in animal research; thus, it was not possible to calculate a (sensible) standard error for the coefficient, nor was it possible to perform a Kruskal-Wallis test on the variation between ARAS-PD groups. As such, these observations were dropped before analysis, and it is not possible to compare humanities student and faculty via the Wald test.
+
+```{r q21a, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Percent of students and faculty who had participated in animal research in the last five years."}
+custom_flextab(q21a_list)
+```
+
+Question 22b (table \@ref(tab:q22b)) asked whether respondents had been vegetarian or vegan in the past five years. Those in the low ARAS-PD group were more likely to have been vegetarian or vegan. There were no substantial differences between demographic groups for either faculty or students, but there were several within-sub-group differences observed. There was significant variability among ARAS-PD groups in the proportion of biological sciences students who had been vegan; the same was true among female students and female faculty.
+
+```{r q22b, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="Percent of student and faculty who had been vegetarian or vegan in the last five years."}
+custom_flextab(q22b_list)
+```
+
+# Discussion & Conclusion
+
+## Discussion
+
+The existence of a relationship between ARAS-PD score and responses to the questions of interest is clear. For students, the low ARAS-PD group consistently felt animal research to be less important, felt rules and regulations surrounding animal research were too lax and/or poorly enforced, were less likely to have participated in animal research and were more likely to have been vegetarian or vegan in the previous five years than those in the moderate group. They also felt less able to make informed decisions about animal research, despite not reporting significantly lower levels of knowledge of the arguments for and against, or of rules and regulations. Though there is some evidence of a similar effect for faculty in the low ARAS-PD group, low ARAS-PD faculty were in general closer to their counterparts in the moderate group on most measures of perceived importance, knowledge, regulatory sufficiency, and on lifestyle questions than students in the same group. 
+
+The converse was less consistently true for students in the high ARAS-PD group. Though these students tended to believe themselves to be more knowledgeable about the arguments for and against animal research and felt more capable of making informed decisions about animal research, they did not feel substantially more knowledgeable about the rules and regulations governing it on average. High ARAS-PD faculty, however, did believe themselves more knowledgeable than those in the moderate group in all three regards. And while high ARAS-PD students and faculty were both more likely than moderates to be feel that animal research is translatable to humans, they did not tend to feel it was more important than did moderates.
+
+There is also evidence that responses tended to vary by ARAS-PD group for certain categories of student. In particular, female students and biological sciences students in different ARAS-PD groups consistently had significantly different patterns of response. Both types of students, for example, had substantial variation between ARAS-PD groups in the degree to which they found animal research to be an important issue, and how translatable they believed the research to be, as did male students and students in the social sciences. Among humanities and physical sciences students, however, ARAS-PD groups only varied in their perception of translatability. For faculty members, none of the sub-groups showed ARAS-PD group variation in perceived importance of animal research as an issue, though there was diversity in its perceived translatability within both genders, as well as among those in the biological and social sciences, and the humanities. All-in-all, responses to the translatability question differed heavily by ARAS-PD group for both students and faculty, but while the question of issue importance showed some patterns of variation for students in different ARAS-PD, faculty in different groups consistently had similar beliefs within gender and academic divisions.
+
+The ARAS-PD groups for female students and students in biological sciences also varied significantly in their self-reported knowledge of rules and regulations, their perceived ability to make informed decisions, their opinion of how thoroughly research proposals are reviewed, their rate of participation in animal research projects, and their rate of vegetarianism and veganism. The only time these two sets of ARAS-PD groups did not display the same level of response variation was on perception of regulatory enforcement stricture; while female students' opinions varied substantially across ARAS-PD groups, the same was not true of biological sciences students.
+
+Otherwise, patterns of response only varied across ARAS-PD groups for particular sub-groups on three questions, particularly question 13, which asked about the perceived sufficiency of animal research rules and regulations. Here, male students' responses varied significantly by ARAS-PD group, while no other group of students showed a similar pattern. Among faculty, there was no ARAS-PD group effect for either gender on this question, but there was among male faculty on the question of research proposal review thoroughness. Faculty ARAS-PD groups' opinions of rule sufficiency did vary, however, within biological sciences and social sciences faculty. Finally, for both social sciences students and female faculty, rates of membership in animal activist groups did differ substantially between ARAS-PD groups.
+
+The differences in response between faculty in various academic divisions is clear. Compared to faculty in the biological sciences, faculty in the humanities and physical sciences found animal research less important, believed themselves to be less knowledgeable, and were more likely to feel that animal research regulations were less stringent in all measures analyzed here. The first two results also hold for faculty in the social sciences. And while social sciences faculty were not significantly less likely than biological sciences faculty to believe that animal research proposals were thoroughly reviewed, they were nevertheless more likely to believe that the rules governing the conduct of animal research were insufficiently strict and not well-enforced enough.
+
+Among students, many similar patterns were found between academic divisions. Students in the physical and social sciences reported having significantly lower levels of knowledge about animal research than those in the biological sciences on all three questions, as did those in the humanities, except when asked about knowledge of rules and regulations. And while female students tended to believe animal research was significantly more important than their male counterparts, students outside of the biological sciences did not believe animal research to be any less or more important than those in the biological sciences; they did, however, consistently believe it to be less translatable to humans. And while students in the physical sciences had beliefs about animal research regulations comparable to those in the biological sciences across the board, students in the humanities and social sciences believed these regulations to be less well-enforced and proposal reviews to be less thoroughly vetted than biological sciences students. Surprisingly, there was not a significant difference in reported rates of participation in animal studies between humanities and biological sciences students; however, students in the physical and social sciences were substantially less likely to have done such research.
+
+## Conclusion
+
+The marked differences in opinion and knowledge about animal research among academic divisions are perhaps not surprising---this result is consistent with Sandgren et. al's initial analysis of the data [@OrigPaper], and makes sense given the relative monopoly those disciplines have on animal research. The fact that ARAS-PD groups have different stances on many aspects of animal research is similar; those who are less comfortable with animal research generally will tend to disapprove of animal research involving pain and distress, while the reverse will tend to hold for those who approve of animal research. The more novel results presented here---the consistent patterns of variation between ARAS-PD groups within certain segments of the UW-Madison population, such as female students and biological sciences students, and the extent to which opinions on translatability track ARAS-PD groups' opinions on animal research in general---are less easily explained, and present a potentially fruitful topic for future survey research.
+
+The main limitations of this report are three-fold. First, due to space and time limitations, I was unable to conduct pairwise Mann-Whitney tests to determine which ARAS-PD groups' responses varied for which sub-groups on each question. My results provide only a general result, namely, they show which sub-groups' opinions are most divided along pain and distress justifiability lines. The models I have presented can, for example, allow me to comment on differences between humanities and biological sciences students, but do not allow me to comment on the differences between humanities and biological sciences in the low ARAS-PD group specifically. To some extent, this is addressed by the Kruskal-Wallis tests, which detect differences in response between ARAS-PD groups within each sub-group. However, these tests do not allow me to comment on between which ARAS-PD groups, to what extent, and in which direction these differences can be found. It will be left for future research to flesh out those details.
+
+Second, no models here included interaction terms, particularly between ARAS-PD group and discipline. This follows from the previous limitation, and creates similar problems. This decision was made in part out of concerns for space and report length---there is no way to clearly define all of the resulting odds ratios in tables as compact as those presented here---and in part for practical reasons. Namely, since ARAS-PD groups are unbalanced across campus status, gender, and academic division, interactions would have sliced the sample into parts too small to guarantee model convergence for some questions. One such problem can already be seen for humanities faculty in question 21a. Rather than presenting a different model for each question with as many ARAS-PD-based interactions as was feasible, I instead chose to keep the models consistent (excepting the one already noted).
+
+Third, my approach to detecting student--faculty differences, the Wald test, did not turn up any significant differences. This is not consistent with the results presented in Sandgren et. al [@OrigPaper], though different statistical method were employed. Strictly speaking, this is not a limitation of my analyses, but a shortcoming of time and knowledge on my part. Not knowing a non-parametric analog for two-factor ANOVA, the Wald test seemed the most sensible option at the outset. Upon further research, robust ANOVA like that proposed by Mair and Wilcox [@anova] could offer a sensible option for future research.
+
+# References
+
+<div id="refs"></div>
+
+# Appendix: AAS, ARAS-P, & ARAS-S Scores
+
+```{r, eval=F}
+
+dat_full %>%
+  select(contains("Score")&!contains("Composite"),
+         ARAS_H_Ave) %>%
+  rstatix::cor_mat()
+
+```
+
+AAS score is the mean of questions measuring a respondent's general attitudes towards non-human animals. Because AAS score is so highly correlated with ARAS-PD score ($r=0.68$), ARAS-PD group unsurprisingly has an effect on the mean AAS score for both student and faculty, with the low group having lower AAS scores and the high group having higher AAS scores on average. Female students and faculty both had significantly lower AAS scores on average than their male counterparts, as did faculty in the humanities, physical sciences, and social sciences relative to faculty in the biological sciences. There is also a significant difference in mean AAS score between ARAS-PD scores within every sub-group for both students and faculty. Table \@ref(tab:AAS6Score) gives the results.
+
+```{r AAS6Score, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="AAS score for students and faculty."}
+custom_flextab(AAS6Score_list)
+```
+
+Because of the high correlation between ARAS-P and ARAS-PD ($r=0.56$), the results for ARAS-P score (table \@ref(tab:ARAS7Score)) are much the same: there is evidence of an ARAS-PD group effect in general and within each sub-group for both students and faculty. Faculty outside of the biological sciences also had significantly lower ARAS-P scores than those in the biological sciences. The first difference from the AAS analysis is that there was no evidence of a difference between male faculty's ARAS-P scores and those of female faculty, though the gender effect remained for students. The second difference that students in the social sciences had significantly lower ARAS-P scores than those in the biological sciences on average, but there was no noticeable effect for the other academic divisions.
+
+```{r ARAS7Score, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="ARAS--Purpose score for students and faculty."}
+custom_flextab(ARAS7Score_list)
+```
+
+Again for ARAS-S (table \@ref(tab:ARASS5Score)), there is strong evidence of an effect of ARAS-PD group because of the strong correlation between the two ($r=0.7$); the low group had ARAS-S scores significantly lower than the moderate group, and the high group had significantly higher scores than the moderate group. Within each sub-group, there was also evidence that scores varied between ARAS-PD groups for both faculty and students. Female students had significantly lower scores than male students on average, while the same was not true for faculty. Faculty outside of the biological sciences again showed significantly lower ARAS-S scores than their biological sciences counterparts, as did students in the social sciences relative to students in the biological sciences. Unlike with ARAS-P scores, however, students in the humanities also had lower ARAS-S scores than biological sciences students, but there remained no evidence of a difference between physical and biological sciences students.
+
+```{r ARASS5Score, echo=F, include=T, message=F, error=F, results='asis', warning=F, fig.align="center", tab.cap="ARAS--Species score for students and faculty."}
+custom_flextab(ARAS_S5Score_list)
+```
